@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PokéExplorer | Discover the World of Pokémon</title>
+    <link rel="stylesheet"  href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Press+Start+2P&display=swap">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>PokéExplorer</h1>
+            <p class="subtitle">Discover the wonderful world of Pokémon</p>
+        </div>
+        
+        <!-- Decorative floating Pokéballs -->
+        <div class="pokeball-decoration" style="top: 20px; left: 10%; animation-delay: 0s;"></div>
+        <div class="pokeball-decoration" style="top: 50px; left: 80%; animation-delay: 1s;"></div>
+        <div class="pokeball-decoration" style="top: 100px; left: 30%; animation-delay: 2s;"></div>
+    </header>
+
+    <main class="container">
+        <div class="search-container">
+            <input type="text" id="pokemon-search" placeholder="Search for a Pokémon by name or ID...">
+            <div class="search-icon">🔍</div>
+        </div>
+
+        <div id="pokemon-grid">
+            <!-- Initial loading state -->
+            <div class="loading">
+                <div class="spinner"></div>
+                <p>Loading Pokémon...</p>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>PokéExplorer &copy; 2023 | Data from <a href="https://pokeapi.co/" target="_blank">PokéAPI</a></p>
+    </footer>
+
+    <script src="scripts.js">
+       
+    </script>
+</body>
+</html>

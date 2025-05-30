@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PokéHub | Ultimate Pokémon Resource</title>
+    <style>
+        :root {
+            --pokemon-red: #FF0000;
+            --pokemon-blue: #3B4CCA;
+            --pokemon-yellow: #FFDE00;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+        body {
+            background-color: #f8f8f8;
+            color: #333;
+            line-height: 1.6;
+        }
+        .hero {
+            background: linear-gradient(135deg, var(--pokemon-red), var(--pokemon-blue));
+            color: white;
+            text-align: center;
+            padding: 5rem 1rem;
+            position: relative;
+            overflow: hidden;
+        }
+        .hero h1 {
+            font-size: 3.5rem;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        .hero p {
+            font-size: 1.2rem;
+            max-width: 700px;
+            margin: 0 auto 2rem;
+        }
+        .cta-button {
+            display: inline-block;
+            background-color: var(--pokemon-yellow);
+            color: #333;
+            padding: 0.8rem 2rem;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.1rem;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .cta-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        .features {
+            max-width: 1200px;
+            margin: 3rem auto;
+            padding: 0 1rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+        .feature-card {
+            background: white;
+            border-radius: 10px;
+            padding: 2rem;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s;
+        }
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
+        .feature-card h2 {
+            color: var(--pokemon-blue);
+            margin-bottom: 1rem;
+        }
+        .feature-card p {
+            color: #666;
+        }
+        footer {
+            text-align: center;
+            padding: 2rem;
+            background-color: #333;
+            color: white;
+        }
+        .pokeball {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 1rem;
+            animation: float 3s ease-in-out infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+    </style>
+</head>
+<body>
+    <div class="hero">
+        <div class="pokeball">
+            <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="50" cy="50" r="45" fill="white" stroke="black" stroke-width="2"/>
+                <circle cx="50" cy="50" r="30" fill="white" stroke="black" stroke-width="2"/>
+                <path d="M 10 50 H 90" stroke="black" stroke-width="2"/>
+                <circle cx="50" cy="50" r="10" fill="black"/>
+            </svg>
+        </div>
+        <h1>Welcome to PokéHub</h1>
+        <p>Your ultimate destination for Pokémon data, stats, and team building. Explore the world of Pokémon like never before!</p>
+        <a href="poki.html" class="cta-button">Explore Pokédex</a>
+    </div>
+
+    <div class="features">
+        <div class="feature-card">
+            <h2>Complete Pokédex</h2>
+            <p>Search and discover all Pokémon from every generation with detailed stats, evolutions, and more.</p>
+        </div>
+        <div class="feature-card">
+            <h2>Type Matchups</h2>
+            <p>Master battles with our interactive type effectiveness calculator.</p>
+        </div>
+        <div class="feature-card">
+            <h2>Team Builder</h2>
+            <p>Create and share your perfect Pokémon team with advanced analysis tools.</p>
+        </div>
+    </div>
+
+    <footer>
+        <p>© 2023 PokéHub | Not affiliated with Nintendo or The Pokémon Company</p>
+        <p>Data provided by <a href="https://pokeapi.co/" style="color: var(--pokemon-yellow);">PokeAPI</a></p>
+    </footer>
+</body>
+</html>
