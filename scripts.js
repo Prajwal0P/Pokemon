@@ -14,12 +14,12 @@ const typeColors = {
     steel: '#B8B8D0', fairy: '#EE99AC'
 };
 
-// Cache Pokémon names and data for autocomplete and faster access
+// Cache Pokémon names and data for autocomplete and reuse
 let pokemonNames = [];
 const pokemonCache = new Map();
 
-// Cache all type weaknesses upfront
-const typeWeaknessesCache = {};
+// Cache all type weaknesses after loading once
+const typeWeaknessCache = {};
 
 // Debounce function
 function debounce(func, delay) {
@@ -38,51 +38,55 @@ async function initApp() {
         const data = await response.json();
         pokemonNames = data.results.map(p => p.name);
 
-        // Fetch and cache all type weaknesses upfront
-        await fetchAllTypeWeaknesses();
-
-        // Load some random Pokémon initially
-        fetchMultiplePokemon(getRandomPokemonIds(6));
+        // Preload all type weaknesses once and cache
+        await loadTypeWeaknesses();
 
         // Event listeners
         searchInput.addEventListener('input', debounce(handleSearchInput, 300));
         searchInput.addEventListener('focus', showSuggestions);
         searchInput.addEventListener('blur', () => setTimeout(() => suggestionsContainer.style.display = 'none', 200));
+
+        // Initial load fewer Pokémon for faster load
+        fetchMultiplePokemon(getRandomPokemonIds(3));
     } catch (error) {
         console.error("Initialization failed:", error);
         showError("Failed to initialize app. Please try again later.");
     }
 }
 
-// Fetch and cache all type weaknesses once
-async function fetchAllTypeWeaknesses() {
+// Load all types weaknesses once
+async function loadTypeWeaknesses() {
     const types = Object.keys(typeColors);
-    await Promise.all(types.map(async (type) => {
-        try {
-            const res = await fetch(`https://pokeapi.co/api/v2/type/${type}`);
-            const data = await res.json();
-            typeWeaknessesCache[type] = data.damage_relations.double_damage_from.map(t => t.name);
-        } catch {
-            typeWeaknessesCache[type] = [];
-        }
+    await Promise.all(types.map(async type => {
+        const res = await fetch(`https://pokeapi.co/api/v2/type/${type}`);
+        const data = await res.json();
+        typeWeaknessCache[type] = data.damage_relations.double_damage_from.map(w => w.name);
     }));
+}
+
+// Get weaknesses from cached type data
+function getWeaknesses(types) {
+    const weaknesses = new Set();
+    types.forEach(type => {
+        (typeWeaknessCache[type] || []).forEach(w => weaknesses.add(w));
+    });
+    return Array.from(weaknesses);
 }
 
 // Main search handler
 async function handleSearchInput() {
     const query = searchInput.value.trim().toLowerCase();
 
-    if (query.length === 0) {
+    if (query.length > 0) {
+        showSuggestions();
+    } else {
         suggestionsContainer.style.display = 'none';
-        fetchMultiplePokemon(getRandomPokemonIds(6));
+        fetchMultiplePokemon(getRandomPokemonIds(3));
         return;
     }
 
-    showSuggestions();
-
     if (query.length > 2) {
         showLoading("Searching...");
-
         try {
             const pokemon = await fetchPokemonData(query);
             displayPokemon([pokemon]);
@@ -127,7 +131,7 @@ function showSuggestions() {
     });
 }
 
-// Fetch multiple Pokémon by IDs or names
+// Fetch multiple Pokémon data in parallel
 async function fetchMultiplePokemon(ids) {
     showLoading("Loading Pokémon...");
 
@@ -140,30 +144,19 @@ async function fetchMultiplePokemon(ids) {
     }
 }
 
-// Fetch Pokémon data with caching
+// Fetch a single Pokémon with caching
 async function fetchPokemonData(idOrName) {
-    if (pokemonCache.has(idOrName)) {
-        return pokemonCache.get(idOrName);
-    }
+    if (pokemonCache.has(idOrName)) return pokemonCache.get(idOrName);
 
     const response = await fetch(`https://pokeapi.co/api/v2/pokemon/${idOrName}`);
     if (!response.ok) throw new Error("Pokémon not found");
-    const data = await response.json();
 
+    const data = await response.json();
     pokemonCache.set(idOrName, data);
     return data;
 }
 
-// Get weaknesses from cached type weaknesses
-function getWeaknesses(types) {
-    const weaknessesSet = new Set();
-    types.forEach(type => {
-        (typeWeaknessesCache[type] || []).forEach(w => weaknessesSet.add(w));
-    });
-    return Array.from(weaknessesSet);
-}
-
-// Display Pokémon cards
+// Display Pokémon cards in the grid
 function displayPokemon(pokemonArray) {
     clearGrid();
     if (!pokemonArray.length) return showError("No Pokémon found.");
@@ -231,18 +224,18 @@ function showPokemonDetails(pokemon, weaknesses) {
                 <div class="pokemon-types">
                     ${pokemon.types.map(t => createTypeBadge(t.type.name)).join('')}
                 </div>
-
+                
                 <h3>Stats</h3>
                 <div class="stats-grid">
                     ${stats.map(stat => createStatBar(stat)).join('')}
                 </div>
-
+                
                 <h3>Abilities</h3>
                 <p>${formatAbilities(pokemon.abilities)}</p>
-
+                
                 <h3>Height & Weight</h3>
                 <p>${formatHeightWeight(pokemon.height, pokemon.weight)}</p>
-
+                
                 <h3>Weaknesses</h3>
                 ${weaknesses.length ? weaknesses.map(w => createTypeBadge(w)).join('') : 'None'}
             </div>
@@ -252,7 +245,6 @@ function showPokemonDetails(pokemon, weaknesses) {
     document.body.appendChild(modal);
     setTimeout(() => modal.classList.add('active'), 10);
 
-    // Close modal handlers
     modal.querySelector('.close-modal').addEventListener('click', closeModal);
     modal.addEventListener('click', (e) => e.target === modal && closeModal());
 
@@ -262,54 +254,17 @@ function showPokemonDetails(pokemon, weaknesses) {
     }
 }
 
-// Helper functions
-function showLoading(message) {
-    pokemonGrid.innerHTML = `
-        <div class="loading">
-            <div class="spinner"></div>
-            <p>${message}</p>
-        </div>
-    `;
-}
-
-function showError(message) {
-    pokemonGrid.innerHTML = `<div class="error-message">${message}</div>`;
-}
-
-function clearGrid() {
-    pokemonGrid.innerHTML = '';
-}
-
-function animateInputError() {
-    searchInput.classList.add('shake');
-    setTimeout(() => searchInput.classList.remove('shake'), 500);
-}
-
-function capitalize(str) {
-    return str.split(/[- ]/).map(word =>
-        word.charAt(0).toUpperCase() + word.slice(1)
-    ).join(' ');
-}
-
-function getRandomPokemonIds(count) {
-    const ids = new Set();
-    while (ids.size < count) {
-        ids.add(Math.floor(Math.random() * 151) + 1); // First generation only
-    }
-    return Array.from(ids);
-}
-
-// Component creation helpers
+// Helpers for UI parts
 function createTypeBadge(type) {
-    return `<span class="type-badge" style="background-color: ${typeColors[type] || '#777'}">
-        ${capitalize(type)}
-    </span>`;
+    const color = typeColors[type] || '#777';
+    return `<span class="type-badge" style="background-color: ${color};">${capitalize(type)}</span>`;
 }
 
 function createStatElement(value, label) {
+    const color = value > 80 ? '#4caf50' : value > 50 ? '#ff9800' : '#f44336';
     return `
         <div class="stat">
-            <div class="stat-value">${value}</div>
+            <div class="stat-value" style="color:${color}">${value}</div>
             <div class="stat-label">${label}</div>
         </div>
     `;
@@ -317,21 +272,57 @@ function createStatElement(value, label) {
 
 function createStatBar(stat) {
     return `
-        <div>
-            <p>${stat.name}: ${stat.value}</p>
-            <div class="stat-bar">
-                <div class="stat-fill" style="width: ${stat.percentage}%"></div>
+        <div class="stat-bar">
+            <div class="stat-name">${stat.name}</div>
+            <div class="bar-container">
+                <div class="bar-fill" style="width:${stat.percentage}%; background-color:#4caf50;"></div>
+                <span class="stat-value">${stat.value}</span>
             </div>
         </div>
     `;
 }
 
 function formatAbilities(abilities) {
-    return abilities.map(a => capitalize(a.ability.name.replace('-', ' '))).join(', ');
+    return abilities
+        .map(a => capitalize(a.ability.name.replace('-', ' ')) + (a.is_hidden ? ' (Hidden)' : ''))
+        .join(', ');
 }
 
-function formatHeightWeight(height, weight) {
-    return `${(height / 10).toFixed(1)} m / ${(weight / 10).toFixed(1)} kg`;
+function formatHeightWeight(heightDecimeters, weightHectograms) {
+    const heightMeters = heightDecimeters / 10;
+    const weightKg = weightHectograms / 10;
+    return `${heightMeters.toFixed(2)} m, ${weightKg.toFixed(2)} kg`;
+}
+
+function capitalize(str) {
+    return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+function clearGrid() {
+    pokemonGrid.innerHTML = '';
+}
+
+function showLoading(message = "Loading...") {
+    clearGrid();
+    pokemonGrid.innerHTML = `<div class="loading">${message}</div>`;
+}
+
+function showError(message) {
+    clearGrid();
+    pokemonGrid.innerHTML = `<div class="error">${message}</div>`;
+}
+
+function animateInputError() {
+    searchInput.classList.add('error');
+    setTimeout(() => searchInput.classList.remove('error'), 500);
+}
+
+function getRandomPokemonIds(count) {
+    const ids = new Set();
+    while (ids.size < count) {
+        ids.add(Math.floor(Math.random() * 151) + 1);
+    }
+    return Array.from(ids);
 }
 
 // Start the app
